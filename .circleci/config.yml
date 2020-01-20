@@ -5,6 +5,8 @@ jobs:
       - image: circleci/golang:1.13
     working_directory: /go/src/github.com/rockset/aws-sm-env
     steps:
+      - attach_workspace:
+          at: ./artifacts
       - checkout
       - run: go test -v
       - run: go build -o ./artifacts/aws-sm-env
