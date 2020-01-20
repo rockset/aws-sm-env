@@ -24,6 +24,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
+      - run: git tag --list
       - run: echo "uploading release with tag ${CIRCLE_TAG}"
       - run: ls -l ./artifacts/aws-sm-env
       - run:
@@ -46,6 +47,6 @@ workflows:
             - build
           filters:
             branches:
-              only: master
+              ignore: /.*/
             tags:
               only: /^v\d+\.\d+\.\d+$/
