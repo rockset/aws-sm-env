@@ -1,12 +1,18 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.13
     working_directory: /go/src/github.com/rockset/aws-sm-env
     steps:
       - checkout
       - run: go test -v
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/rockset/aws-sm-env
+    steps:
+      - checkout
       - run: go build -o ./artifacts/aws-sm-env
       - persist_to_workspace:
           root: ./artifacts
@@ -28,7 +34,13 @@ workflows:
   version: 2
   build_and_publish:
     jobs:
-      - build
+      - test
+      - build:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
       - publish:
           requires:
             - build
