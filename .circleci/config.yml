@@ -24,11 +24,11 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
-      - run: echo "uploading release with tag ${CIRCLE_TAG}"
       - run:
           name: "Publish Release on GitHub"
           command: |
-            ghr -t ${GITHUB_TOKEN} -u -delete ${CIRCLE_TAG} ./artifacts/aws-sm-env
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/aws-sm-env
+
 workflows:
   version: 2
   build_and_publish:
