@@ -45,7 +45,7 @@ func (si *SecretsInjector) Exec(roleArn string, args, env []string) error {
 		if err := si.AssumeRole(roleArn, secrets); err != nil {
 			return err
 		}
-		si.log.Printf("assumed role %s", roleArn)
+		log.Printf("successfully assumed role %s", roleArn)
 	}
 
 	injectedEnv, err := si.inject(env, secrets)
