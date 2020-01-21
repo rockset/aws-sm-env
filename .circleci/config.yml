@@ -13,7 +13,7 @@ jobs:
     working_directory: /go/src/github.com/rockset/aws-sm-env
     steps:
       - checkout
-      - run: go build -o ./artifacts/aws-sm-env
+      - run: go build ldflags "-linkmode external -extldflags -static" -o ./artifacts/aws-sm-env
       - persist_to_workspace:
           root: ./artifacts
           paths:
