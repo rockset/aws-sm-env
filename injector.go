@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"io"
 	"log"
 	"os/exec"
@@ -28,7 +30,7 @@ func NewSecretsInjector(logStream io.Writer, name string) *SecretsInjector {
 }
 
 // Exec runs the exec() syscall with the supplied arguments
-func (si *SecretsInjector) Exec(args, env []string) error {
+func (si *SecretsInjector) Exec(roleArn string, args, env []string) error {
 	path, filteredArgs, err := filterArgs(args)
 	if err != nil {
 		return err
@@ -37,6 +39,13 @@ func (si *SecretsInjector) Exec(args, env []string) error {
 	secrets, err := si.getSecrets()
 	if err != nil {
 		return err
+	}
+
+	if roleArn != "" {
+		if err := si.AssumeRole(roleArn, secrets); err != nil {
+			return err
+		}
+		si.log.Printf("assumed role %s", roleArn)
 	}
 
 	injectedEnv, err := si.inject(env, secrets)
@@ -127,4 +136,42 @@ func (si *SecretsInjector) inject(env []string, secrets map[string]string) ([]st
 	}
 
 	return newEnv, nil
+}
+
+func (si *SecretsInjector) AssumeRole(roleArn string, secrets map[string]string) error {
+	sess, err := session.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create AWS session: %w", err)
+	}
+	client := sts.New(sess)
+
+	sn, err := sessionName()
+	if err != nil {
+		return err
+	}
+
+	req := &sts.AssumeRoleInput{
+		RoleArn:         aws.String(roleArn),
+		RoleSessionName: sn,
+	}
+	res, err := client.AssumeRole(req)
+	if err != nil {
+		return fmt.Errorf("failed to assume role %s: %w", roleArn, err)
+	}
+
+	secrets["AWS_ACCESS_KEY_ID"] = *res.Credentials.AccessKeyId
+	secrets["AWS_SECRET_ACCESS_KEY"] = *res.Credentials.SecretAccessKey
+	secrets["AWS_SESSION_TOKEN"] = *res.Credentials.SessionToken
+
+	return nil
+}
+
+func sessionName() (*string, error) {
+	var rid [16]byte
+	_, err := io.ReadFull(rand.Reader, rid[:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random session name: %w", err)
+	}
+
+	return aws.String(fmt.Sprintf("aws-sm-env-%x", rid[:])), nil
 }

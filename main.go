@@ -6,12 +6,15 @@ import (
 	"os"
 )
 
-const envVarName = "SECRETS_MANAGER_PATH"
+const (
+	envSecretsManagerPath = "SECRETS_MANAGER_PATH"
+	envAssumeRoleArn      = "ASSUME_ROLE_ARN"
+)
 
 func main() {
-	name := os.Getenv(envVarName)
+	name := os.Getenv(envSecretsManagerPath)
 	if name == "" {
-		log.Fatalf("%s environment variable required", envVarName)
+		log.Fatalf("%s environment variable required", envSecretsManagerPath)
 	}
 
 	logStream := ioutil.Discard
@@ -19,8 +22,10 @@ func main() {
 		logStream = os.Stderr
 	}
 
+	roleArn := os.Getenv("envAssumeRoleArn")
+
 	si := NewSecretsInjector(logStream, name)
-	if err := si.Exec(os.Args, os.Environ()); err != nil {
+	if err := si.Exec(roleArn, os.Args, os.Environ()); err != nil {
 		log.Fatalln(err)
 	}
 }

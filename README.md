@@ -1,9 +1,10 @@
 # `aws-sm-env`
 
-A tool to inject AWS Secrets Manager secrets as environment variables in a command
+A tool to inject AWS Secrets Manager secrets as environment variables in a command.
+It also lets you assume a IAM role after fetching the secrets.
 
 ```
-SECRETS_MANAGER_PATH=packer/buildkite aws-sm-env packer build buildkite.json
+ASSUME_ROLE_ARN=arn:aws:iam::216640736862:role/buildkite-agent SECRETS_MANAGER_PATH=packer/buildkite aws-sm-env packer build buildkite.json
 ```
 
 ## Release
