@@ -74,6 +74,12 @@ func filterArgs(args []string) (string, []string, error) {
 func (si *SecretsInjector) getSecrets() (map[string]string, error) {
 	secrets := make(map[string]string)
 
+	// if we don't get a Secrets Manager path to look up, return an empty map so Exec() still works
+	if si.name == "" {
+		si.log.Printf("WARNING: environment variable %s is not set, can't get secrets to inject", envSecretsManagerPath)
+		return secrets, nil
+	}
+
 	sess, err := session.NewSession()
 	if err != nil {
 		return secrets, fmt.Errorf("failed to create AWS session: %w", err)

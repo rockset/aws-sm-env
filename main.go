@@ -14,9 +14,6 @@ const (
 
 func main() {
 	name := os.Getenv(envSecretsManagerPath)
-	if name == "" {
-		log.Fatalf("%s environment variable required", envSecretsManagerPath)
-	}
 
 	logStream := ioutil.Discard
 	if debug := os.Getenv(envDebug); debug != "" {
